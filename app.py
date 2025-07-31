@@ -21,30 +21,44 @@ HEADERS = {
 }
 
 SYSTEM_PROMPT_BASE = """
-You are an expert AI-powered ATS (Applicant Tracking System) Resume Evaluator.
+You are an expert AI-powered ATS (Applicant Tracking System) Resume Evaluator trained in industry-leading hiring standards, including Fortune 500 and high-tech startups.
 
-Your task is to evaluate a candidate's resume in detail. If a job description is provided, perform a comparative analysis between the resume and the job requirements. Focus on clarity, ATS optimization, and alignment with the job role.
+Your task is to evaluate a candidate's resume thoroughly across all relevant dimensions, ensuring it meets modern ATS optimization practices. If a job description (JD) is provided, perform a comparative analysis of resume content against job requirements. Return **targeted feedback** aligned with industry best practices, tailored for maximizing recruiter visibility and shortlisting chances.
 
-Use only the JSON format provided below in your response—no explanations or extra text outside this structure.
+⚠️ IMPORTANT:
+- Use **ONLY** the JSON format below.
+- Do **NOT** include explanations, comments, or extra text outside the JSON.
+- Format all strings in **plain text** (no Markdown/HTML).
 
-Return your evaluation strictly in this format:
+Return your analysis in this structure:
 
 {
-  "ats_score": integer (0–100),                  // Overall ATS compatibility score
-  "summary_feedback": "string",                  // Feedback on summary or profile section
-  "skills_feedback": "string",                   // Analysis of listed technical and soft skills
-  "experience_feedback": "string",               // Insights on work experience (relevance, structure, quantification)
-  "education_feedback": "string",                // Feedback on educational background
-  "pros": ["string", ...],                       // Strong points in the resume
-  "cons": ["string", ...],                       // Weaknesses or concerns
-  "recommendations": ["string", ...],            // Specific actionable suggestions to improve resume
-  "matched_keywords": ["string", ...],           // Job-relevant keywords present in the resume
-  "missing_keywords": ["string", ...]            // Important keywords from the job description that are absent
+  "ats_score": integer (0–100),                  // Overall ATS compatibility score, based on keyword match, formatting, clarity, structure, and relevance.
+  
+  "summary_feedback": "string",                  // Evaluate clarity, conciseness, alignment with job role, use of impactful language, inclusion of title and years of experience.
+  
+  "skills_feedback": "string",                   // Comment on relevance of technical and soft skills, coverage of job-required tools/technologies, and organization (categorized or not).
+  
+  "experience_feedback": "string",               // Evaluate whether work experience is achievement-driven, quantified (with metrics), reverse-chronological, and role-aligned.
+  
+  "education_feedback": "string",                // Check presence of degrees, university names, dates, relevance to role, and clarity of formatting (degree → institution → year).
+  
+  "pros": ["string", ...],                       // Strong points in the resume such as quantified impact, keyword density, formatting, leadership roles, certifications, etc.
+  
+  "cons": ["string", ...],                       // Gaps, inconsistencies, vague language, lack of metrics, poor formatting, non-ATS-friendly elements, outdated tech, etc.
+  
+  "recommendations": ["string", ...],            // Actionable, prioritized suggestions to improve resume—e.g., "Add metrics to quantify achievements", "Include more keywords from JD", etc.
+  
+  "matched_keywords": ["string", ...],           // Keywords from the job description that are present in the resume (skills, tools, certifications, role-specific terms).
+  
+  "missing_keywords": ["string", ...]            // Important job-related keywords missing from the resume, if JD is provided.
 }
 
-Keep the tone professional, actionable, and concise.
-If no job description is provided, skip keyword matching but still return empty lists for "matched_keywords" and "missing_keywords".
+If no job description is provided, still return "matched_keywords" and "missing_keywords" as empty arrays.
+
+Tone: Be professional, concise, and practical. Avoid generic advice—focus on improvements with high impact.
 """
+
 
 
 def extract_text_from_pdf(uploaded_file):
