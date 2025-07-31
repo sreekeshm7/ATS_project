@@ -89,16 +89,54 @@ Job Description:
         st.error(f"API error: {response.status_code} - {response.text}")
     return None
 
-# Streamlit UI
-st.set_page_config(page_title="AI ATS Resume Checker", layout="centered")
-st.title("📄 AI-Powered ATS Resume Checker")
-st.markdown("Upload your resume (PDF, DOCX, JSON). Job Description is optional for detailed feedback.")
+# ------------------------------ Streamlit UI ------------------------------ #
 
-resume_file = st.file_uploader("📁 Upload Resume", type=["pdf", "docx", "json"])
-jd_input = st.text_area("💼 Paste Job Description (Optional)", height=200)
+st.set_page_config(
+    page_title="AI ATS Resume Checker",
+    layout="centered",
+    page_icon="📄"
+)
+st.markdown("""
+    <style>
+    .stButton>button {
+        background-color: #007acc;
+        color: white;
+        font-weight: 600;
+        border-radius: 8px;
+        padding: 10px 20px;
+    }
+    .stButton>button:hover {
+        background-color: #005c99;
+    }
+    .stTextArea textarea {
+        background-color: #f9f9f9;
+    }
+    </style>
+    """, unsafe_allow_html=True)
+
+# Optional logo at top
+st.markdown(
+    """
+    <div style='text-align: center; margin-top: -40px;'>
+        <img src='https://img.icons8.com/ios-filled/100/resume.png' width='80'/>
+        <h1 style='color: #004d99;'>AI-Powered ATS Resume Checker</h1>
+        <p style='font-size: 16px;'>Evaluate your resume with AI and get actionable feedback.</p>
+    </div>
+    """,
+    unsafe_allow_html=True
+)
+
+# Upload section
+st.markdown("### 📤 Upload Your Resume (PDF, DOCX, or JSON)")
+resume_file = st.file_uploader("", type=["pdf", "docx", "json"])
+
+# Optional Job Description input
+st.markdown("### 💼 Paste Job Description (Optional)")
+jd_input = st.text_area("", height=180, placeholder="Paste job description here (optional)...")
 
 resume_text = ""
 
+# Resume parsing
 if resume_file:
     if resume_file.name.endswith(".pdf"):
         resume_text = extract_text_from_pdf(resume_file)
@@ -109,30 +147,67 @@ if resume_file:
     else:
         st.warning("Unsupported file format.")
 
-if st.button("🚀 Analyze Resume"):
+# Analyze button
+if st.button("🚀 Analyze Resume", use_container_width=True):
     if resume_text.strip():
-        with st.spinner("Analyzing resume with Mistral..."):
+        with st.spinner("🔍 Analyzing resume with AI..."):
             result = call_groq_mistral(resume_text, jd_input)
+
         if result:
             st.success("✅ Analysis Complete")
-            st.markdown(f"### 🎯 ATS Score: **{result['ats_score']} / 100**")
-            st.subheader("🧩 Section Feedback")
-            st.write("**Summary**:", result["summary_feedback"])
-            st.write("**Skills**:", result["skills_feedback"])
-            st.write("**Experience**:", result["experience_feedback"])
-            st.write("**Education**:", result["education_feedback"])
 
-            st.subheader("✅ Pros")
-            st.markdown("\n".join([f"- {pro}" for pro in result["pros"]]))
+            # ATS Score Card
+            st.markdown(f"""
+                <div style="padding: 15px; border-radius: 10px; background-color: #e8f4f8; border-left: 6px solid #007acc;">
+                    <h3 style="color: #007acc;">🎯 ATS Compatibility Score: <span style="color: #000;">{result['ats_score']} / 100</span></h3>
+                </div>
+                """,
+                unsafe_allow_html=True,
+            )
 
-            st.subheader("❌ Cons")
-            st.markdown("\n".join([f"- {con}" for con in result["cons"]]))
+            # Section Feedback
+            st.markdown("---")
+            st.markdown("### 🧩 Section-wise Feedback")
 
-            st.subheader("🛠️ Recommendations")
-            st.markdown("\n".join([f"- {rec}" for rec in result["recommendations"]]))
+            with st.expander("📝 Summary Feedback", expanded=True):
+                st.write(result["summary_feedback"])
+            with st.expander("🛠️ Skills Feedback", expanded=True):
+                st.write(result["skills_feedback"])
+            with st.expander("💼 Experience Feedback", expanded=True):
+                st.write(result["experience_feedback"])
+            with st.expander("🎓 Education Feedback", expanded=True):
+                st.write(result["education_feedback"])
 
-            st.subheader("🔍 Keywords")
-            st.write("**Matched:**", ", ".join(result["matched_keywords"]))
-            st.write("**Missing:**", ", ".join(result["missing_keywords"]))
+            # Pros and Cons
+            st.markdown("---")
+            col1, col2 = st.columns(2)
+            with col1:
+                st.markdown("### ✅ Strengths")
+                for pro in result["pros"]:
+                    st.markdown(f"- 🟢 {pro}")
+            with col2:
+                st.markdown("### ❌ Weaknesses")
+                for con in result["cons"]:
+                    st.markdown(f"- 🔴 {con}")
+
+            # Recommendations
+            st.markdown("---")
+            st.markdown("### 🛠️ Recommendations to Improve Your Resume")
+            for rec in result["recommendations"]:
+                st.markdown(f"- 💡 {rec}")
+
+            # Keywords
+            st.markdown("---")
+            st.markdown("### 🔍 Keyword Analysis")
+            col1, col2 = st.columns(2)
+            with col1:
+                st.markdown("#### ✅ Matched Keywords")
+                st.write(", ".join(result["matched_keywords"]) or "_None_")
+            with col2:
+                st.markdown("#### ❗ Missing Keywords")
+                st.write(", ".join(result["missing_keywords"]) or "_None_")
+        else:
+            st.error("Something went wrong. Please try again.")
     else:
         st.warning("Please upload a resume to proceed.")
+
