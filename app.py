@@ -70,7 +70,7 @@ Job Description:
 {job_description if job_description else 'N/A'}
 """
     payload = {
-        "model": "llama3-70b-8192",
+        "model": "llama‑3.3‑70b‑versatile",
         "messages": [
             {"role": "system", "content": SYSTEM_PROMPT_BASE},
             {"role": "user", "content": user_prompt}
