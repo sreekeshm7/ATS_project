@@ -15,83 +15,32 @@ HEADERS = {
     "Content-Type": "application/json"
 }
 
-# Enhanced system prompt with more detailed evaluation criteria
-SYSTEM_PROMPT_BASE = """
-You are an elite AI-powered ATS (Applicant Tracking System) Resume Evaluator with expertise in Fortune 500, tech startups, and industry-specific hiring standards. Your analysis combines modern ATS algorithms with human recruiter insights.
+# Simplified but effective system prompt
+SYSTEM_PROMPT = """
+You are an expert ATS (Applicant Tracking System) Resume Analyzer. Evaluate the resume for ATS compatibility and provide detailed feedback.
 
-Core Evaluation Dimensions:
-1. ATS Optimization: Parse for keyword density, formatting compliance, and machine readability
-2. Content Quality: Assess impact statements, quantifiable achievements, and role relevance
-3. Technical Alignment: Compare technical skills, tools, and methodologies against industry standards
-4. Career Progression: Evaluate career trajectory, role transitions, and leadership growth
-5. Modern Resume Standards: Check for current best practices in resume writing and formatting
-
-Evaluation Guidelines:
-- Scan for both explicit keywords and semantic matches
-- Analyze achievement statements for STAR format compliance
-- Verify proper section hierarchy and formatting
-- Check for appropriate use of industry terminology
-- Assess quantitative metrics and impact measurements
-- Evaluate personal branding elements and professional positioning
-
-Return your comprehensive analysis in this JSON structure:
-
+Return your analysis in this exact JSON format:
 {
-  "ats_score": integer (0-100),                  // Composite score based on 5 dimensions above
-  
-  "summary_feedback": {
-    "overall_assessment": "string",              // High-level evaluation summary
-    "branding_effectiveness": "string",          // Analysis of professional positioning
-    "clarity_score": integer (0-100)            // Readability and clarity rating
-  },
-  
-  "skills_analysis": {
-    "technical_skills": ["string", ...],         // Identified technical competencies
-    "soft_skills": ["string", ...],             // Identified soft skills
-    "skill_gaps": ["string", ...],              // Missing critical skills
-    "proficiency_levels": {                     // Estimated skill levels
-      "skill_name": "level (Basic/Intermediate/Advanced)"
-    }
-  },
-  
-  "experience_evaluation": {
-    "achievement_analysis": ["string", ...],     // Analysis of key achievements
-    "impact_metrics": ["string", ...],          // Identified quantitative results
-    "progression_pattern": "string",            // Career progression assessment
-    "leadership_indicators": ["string", ...]    // Leadership experience analysis
-  },
-  
-  "education_assessment": {
-    "qualifications": ["string", ...],          // Formal education details
-    "certifications": ["string", ...],          // Professional certifications
-    "continuing_education": ["string", ...]     // Additional training/education
-  },
-  
-  "formatting_analysis": {
-    "structure_score": integer (0-100),         // Layout and organization rating
-    "ats_compatibility": ["string", ...],       // ATS-friendly elements
-    "formatting_issues": ["string", ...]        // Formatting problems to fix
-  },
-  
-  "keyword_analysis": {
-    "matched_keywords": {                       // Present keywords with context
-      "keyword": "context/usage"
+    "ats_score": <0-100 integer>,
+    "overview": {
+        "summary": "string",
+        "impression": "string"
     },
-    "missing_keywords": ["string", ...],        // Critical missing keywords
-    "keyword_density_score": integer (0-100)    // Keyword optimization score
-  },
-  
-  "recommendations": {
-    "critical_improvements": ["string", ...],    // High-priority changes
-    "suggested_enhancements": ["string", ...],   // Nice-to-have improvements
-    "industry_alignments": ["string", ...]      // Industry-specific suggestions
-  }
+    "section_analysis": {
+        "format": "string",
+        "content": "string",
+        "keywords": "string"
+    },
+    "strengths": ["string"],
+    "weaknesses": ["string"],
+    "improvements": ["string"],
+    "keywords": {
+        "found": ["string"],
+        "missing": ["string"]
+    }
 }
-
-Maintain a professional, actionable tone focusing on specific, implementable improvements.
 """
 
-# Enhanced file processing functions
 def extract_text_from_pdf(uploaded_file):
     try:
         with fitz.open(stream=uploaded_file.read(), filetype="pdf") as doc:
@@ -100,113 +49,157 @@ def extract_text_from_pdf(uploaded_file):
                 text += page.get_text()
             return text.strip()
     except Exception as e:
-        st.error(f"Error processing PDF: {str(e)}")
-        return ""
+        st.error(f"PDF processing error: {str(e)}")
+        return None
 
 def extract_text_from_docx(uploaded_file):
     try:
         return docx2txt.process(uploaded_file).strip()
     except Exception as e:
-        st.error(f"Error processing DOCX: {str(e)}")
-        return ""
+        st.error(f"DOCX processing error: {str(e)}")
+        return None
 
-# Enhanced API call function
 def analyze_resume(resume_text, job_description=""):
     try:
-        user_prompt = f"""
-        Resume Content:
-        {resume_text}
-
-        Job Description:
-        {job_description if job_description else 'No job description provided'}
-
-        Please provide a detailed analysis following the specified JSON structure.
-        """
-
+        messages = [
+            {"role": "system", "content": SYSTEM_PROMPT},
+            {"role": "user", "content": f"Resume:\n{resume_text}\n\nJob Description:\n{job_description}"}
+        ]
+        
         payload = {
             "model": "llama3-8b-8192",
-            "messages": [
-                {"role": "system", "content": SYSTEM_PROMPT_BASE},
-                {"role": "user", "content": user_prompt}
-            ],
+            "messages": messages,
             "temperature": 0.3,
-            "max_tokens": 4000
+            "max_tokens": 2000
         }
 
         response = requests.post(GROQ_API_URL, headers=HEADERS, json=payload)
-        response.raise_for_status()
         
-        return json.loads(response.json()["choices"][0]["message"]["content"])
+        if response.status_code != 200:
+            st.error(f"API Error: {response.status_code}")
+            return None
+
+        response_data = response.json()
+        if "choices" not in response_data or not response_data["choices"]:
+            st.error("Invalid API response format")
+            return None
+
+        content = response_data["choices"][0]["message"]["content"]
+        
+        # Find the JSON object in the response
+        try:
+            # Remove any potential non-JSON text before and after the JSON object
+            content = content.strip()
+            if content.find("{") >= 0:
+                content = content[content.find("{"):]
+            if content.rfind("}") >= 0:
+                content = content[:content.rfind("}")+1]
+            
+            return json.loads(content)
+        except json.JSONDecodeError as e:
+            st.error(f"JSON parsing error: {str(e)}")
+            st.text("Raw response:")
+            st.code(content)
+            return None
+
     except Exception as e:
         st.error(f"Analysis error: {str(e)}")
         return None
 
-# Enhanced UI
-def create_ui():
-    st.set_page_config(
-        page_title="Advanced ATS Resume Analyzer",
-        page_icon="📊",
-        layout="wide"
-    )
+def display_results(analysis):
+    # Score Card
+    st.markdown("""
+        <style>
+        .score-card {
+            padding: 20px;
+            border-radius: 10px;
+            background-color: #f0f8ff;
+            margin: 20px 0;
+            border-left: 5px solid #0066cc;
+        }
+        </style>
+    """, unsafe_allow_html=True)
 
-    # Custom CSS
+    st.markdown(f"""
+        <div class='score-card'>
+            <h2>ATS Compatibility Score: {analysis['ats_score']}/100</h2>
+            <p>{analysis['overview']['impression']}</p>
+        </div>
+    """, unsafe_allow_html=True)
+
+    # Detailed Analysis
+    st.header("📊 Detailed Analysis")
+    
+    col1, col2 = st.columns(2)
+    
+    with col1:
+        st.subheader("💪 Strengths")
+        for strength in analysis['strengths']:
+            st.markdown(f"✅ {strength}")
+            
+    with col2:
+        st.subheader("🔍 Areas for Improvement")
+        for weakness in analysis['weaknesses']:
+            st.markdown(f"❗ {weakness}")
+
+    # Section Analysis
+    st.header("📑 Section-by-Section Analysis")
+    with st.expander("Format Analysis", expanded=True):
+        st.write(analysis['section_analysis']['format'])
+    with st.expander("Content Analysis", expanded=True):
+        st.write(analysis['section_analysis']['content'])
+    with st.expander("Keyword Analysis", expanded=True):
+        st.write(analysis['section_analysis']['keywords'])
+
+    # Keywords
+    st.header("🎯 Keyword Analysis")
+    col1, col2 = st.columns(2)
+    
+    with col1:
+        st.subheader("Found Keywords")
+        for keyword in analysis['keywords']['found']:
+            st.markdown(f"✅ {keyword}")
+            
+    with col2:
+        st.subheader("Missing Keywords")
+        for keyword in analysis['keywords']['missing']:
+            st.markdown(f"❌ {keyword}")
+
+    # Recommendations
+    st.header("🚀 Recommended Improvements")
+    for idx, improvement in enumerate(analysis['improvements'], 1):
+        st.markdown(f"{idx}. {improvement}")
+
+def main():
+    st.set_page_config(page_title="ATS Resume Analyzer", layout="wide")
+    
     st.markdown("""
         <style>
         .main {
             padding: 2rem;
         }
         .stButton > button {
-            width: 100%;
             background-color: #0066cc;
             color: white;
             padding: 0.75rem;
             border-radius: 0.5rem;
-            border: none;
             font-weight: 600;
-            transition: all 0.3s;
-        }
-        .stButton > button:hover {
-            background-color: #0052a3;
-            transform: translateY(-2px);
-        }
-        .metric-card {
-            background-color: #f8f9fa;
-            padding: 1rem;
-            border-radius: 0.5rem;
-            border: 1px solid #dee2e6;
-            margin: 0.5rem 0;
-        }
-        .feedback-section {
-            margin: 1.5rem 0;
-            padding: 1rem;
-            border-radius: 0.5rem;
-            background-color: #ffffff;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
         }
         </style>
     """, unsafe_allow_html=True)
 
-    # Header
-    st.title("🎯 Advanced ATS Resume Analyzer")
-    st.markdown("### Optimize your resume with AI-powered insights")
+    st.title("📄 ATS Resume Analyzer")
+    st.markdown("### Optimize your resume with AI-powered analysis")
 
-    # File upload and job description
-    col1, col2 = st.columns([1, 1])
+    col1, col2 = st.columns([2, 1])
     
     with col1:
-        st.markdown("### 📄 Upload Resume")
-        resume_file = st.file_uploader("", type=["pdf", "docx"])
-
+        resume_file = st.file_uploader("Upload your resume (PDF or DOCX)", type=["pdf", "docx"])
+        
     with col2:
-        st.markdown("### 💼 Job Description")
-        job_description = st.text_area("", height=150)
+        job_description = st.text_area("Paste job description (optional)", height=150)
 
-    return resume_file, job_description
-
-def main():
-    resume_file, job_description = create_ui()
-
-    if resume_file and st.button("🔍 Analyze Resume"):
+    if resume_file and st.button("Analyze Resume"):
         with st.spinner("Analyzing your resume..."):
             # Extract text based on file type
             if resume_file.type == "application/pdf":
@@ -215,12 +208,13 @@ def main():
                 resume_text = extract_text_from_docx(resume_file)
 
             if resume_text:
-                result = analyze_resume(resume_text, job_description)
-                
-                if result:
-                    # Display results in an organized, visually appealing manner
-                    # (Add detailed result display code here)
-                    pass
+                analysis = analyze_resume(resume_text, job_description)
+                if analysis:
+                    display_results(analysis)
+                else:
+                    st.error("Failed to analyze resume. Please try again.")
+            else:
+                st.error("Failed to extract text from the resume. Please check the file and try again.")
 
 if __name__ == "__main__":
     main()
