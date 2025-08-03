@@ -223,7 +223,7 @@ def display_results(analysis):
 # ====== MAIN APP ======
 def main():
     st.set_page_config(page_title="✨ Executive ATS Resume Analyzer", layout="wide", page_icon="📝")
-        st.markdown("""
+    st.markdown("""
     <style>
     body { background: linear-gradient(120deg,#0a182e 0,#141e30 60%,#093648 100%) !important; color: #bde2e8; }
     .stApp { background: linear-gradient(120deg,#0a182f 0,#141e30 60%,#093648 100%) !important; }
@@ -279,3 +279,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+
