@@ -1,4 +1,3 @@
-python
 import streamlit as st
 import requests
 import json
@@ -342,3 +341,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+
