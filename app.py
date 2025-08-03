@@ -167,12 +167,12 @@ def extract_text_from_docx(uploaded_file):
         return None
 
 def clean_json_response(content):
-    """Clean and extract JSON from AI response"""
+    """Clean and extract JSON from AI response - FIXED VERSION"""
     try:
         # Remove any markdown formatting
         content = content.strip()
         
-        # Handle code blocks
+        # Handle different code block formats - PROPERLY QUOTED STRINGS
         if "```
             start = content.find("```json") + 7
             end = content.find("```
@@ -203,7 +203,7 @@ def analyze_resume(resume_text, job_description="", industry="General"):
     try:
         user_content = f"""
 RESUME CONTENT:
-{resume_text[:4000]}  # Truncate to avoid token limits
+{resume_text[:4000]}
 
 TARGET INDUSTRY: {industry}
 
