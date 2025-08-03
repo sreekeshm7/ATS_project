@@ -6,8 +6,8 @@ import fitz
 import docx2txt
 from dotenv import load_dotenv
 import plotly.graph_objects as go
-import plotly.express as px
 from datetime import datetime
+import time
 
 # Load environment variables
 load_dotenv()
@@ -18,160 +18,136 @@ HEADERS = {
     "Content-Type": "application/json"
 }
 
-# Enhanced system prompt with more sophisticated analysis
+# Enhanced system prompt
 SYSTEM_PROMPT = """
-You are an elite ATS (Applicant Tracking System) Resume Analyzer and Career Strategist with expertise in:
-- Fortune 500 recruitment practices
-- Modern ATS technologies (Workday, Greenhouse, Lever, etc.)
-- Industry-specific hiring trends across 20+ sectors
-- Executive search and technical recruitment standards
-- Global hiring practices and cultural considerations
+You are an elite ATS Resume Analyzer with expertise in Fortune 500 recruitment practices, modern ATS technologies, and industry-specific hiring trends.
 
-COMPREHENSIVE EVALUATION FRAMEWORK:
+EVALUATION FRAMEWORK:
 
 1. ATS TECHNICAL COMPATIBILITY (25%)
-   - Multi-format parsing ability (PDF, DOCX structure analysis)
-   - Header recognition and field mapping accuracy
-   - Font compatibility (ATS-safe vs problematic fonts)
-   - Table, column, and graphic handling
-   - Contact information extraction reliability
-   - File size and formatting optimization
-   - Unicode and special character handling
+   - PDF/DOCX parsing ability and structure
+   - Header recognition and field mapping
+   - Font compatibility and readability
+   - Contact information extraction
+   - File formatting optimization
 
-2. STRATEGIC KEYWORD OPTIMIZATION (25%)
-   - Industry-specific terminology density and relevance
-   - Technical skills matrix alignment
-   - Soft skills integration and context
-   - Job description keyword matching (semantic analysis)
-   - Action verb variety and impact strength
+2. KEYWORD OPTIMIZATION (25%)
+   - Industry-specific terminology
+   - Technical skills alignment
+   - Job description matching
+   - Action verbs and impact words
    - Professional jargon appropriateness
-   - Trending skills and certifications inclusion
-   - Geographic and cultural keyword variations
 
-3. CONTENT IMPACT & STORYTELLING (35%)
-   - STAR method implementation (Situation, Task, Action, Result)
-   - Quantified achievements with business impact metrics
-   - Career progression narrative and growth demonstration
-   - Leadership examples and team impact
-   - Problem-solving case studies
-   - Innovation and initiative showcases
-   - Cross-functional collaboration evidence
-   - ROI and value proposition clarity
-   - Industry awards, recognition, and thought leadership
+3. CONTENT IMPACT (35%)
+   - STAR method implementation
+   - Quantified achievements
+   - Career progression narrative
+   - Leadership examples
+   - Problem-solving evidence
 
-4. PROFESSIONAL PRESENTATION & BRAND (15%)
-   - Visual hierarchy and readability optimization
-   - Length appropriateness for seniority level
-   - Professional summary hook and value proposition
-   - Education relevance and positioning
-   - Certification currency and industry recognition
-   - Contact information completeness and professionalism
-   - Social media and portfolio integration
-   - Personal branding consistency
+4. PROFESSIONAL PRESENTATION (15%)
+   - Visual hierarchy and layout
+   - Length appropriateness
+   - Professional summary effectiveness
+   - Education and certification relevance
+   - Overall brand consistency
 
-ADVANCED SCORING MATRIX:
-- 95-100: Executive-Ready - Top 1% candidate presentation
-- 85-94: Senior Professional - Strong competitive advantage
-- 75-84: Mid-Level Optimized - Good market positioning
-- 65-74: Entry-Professional - Solid foundation, needs enhancement
-- 55-64: Developing - Significant improvements needed
+SCORING:
+- 95-100: Executive-Ready
+- 85-94: Senior Professional
+- 75-84: Mid-Level Optimized
+- 65-74: Entry Professional
+- 55-64: Developing
 - Below 55: Critical Overhaul Required
 
-INDUSTRY-SPECIFIC CONSIDERATIONS:
-- Technology: Focus on technical stacks, GitHub, certifications
-- Finance: Emphasize quantified results, regulatory knowledge
-- Healthcare: Highlight certifications, patient outcomes, compliance
-- Marketing: Showcase campaign results, creative projects, analytics
-- Sales: Demonstrate quota achievement, pipeline management
-- Consulting: Evidence of client impact, methodology expertise
-
-Return analysis in this enhanced JSON format:
+Return your analysis in this JSON format:
 
 {
-    "ats_score": <integer 0-100>,
-    "confidence_level": <integer 0-100>,
-    "score_interpretation": "<Executive-Ready/Senior Professional/Mid-Level Optimized/Entry-Professional/Developing/Critical Overhaul Required>",
-    "market_competitiveness": "<Exceptional/Strong/Competitive/Average/Below Average>",
-    "executive_summary": "3-4 sentence strategic assessment of resume effectiveness, market positioning, and competitive advantage",
+    "ats_score": 85,
+    "confidence_level": 90,
+    "score_interpretation": "Senior Professional",
+    "market_competitiveness": "Strong",
+    "executive_summary": "This resume demonstrates strong technical skills and clear career progression, with excellent quantification of achievements. Minor improvements in keyword optimization could enhance ATS compatibility.",
     "detailed_analysis": {
         "ats_compatibility": {
-            "score": <integer 0-100>,
-            "analysis": "Technical parsing assessment with specific recommendations",
-            "critical_fixes": ["Immediate technical issues to address"]
+            "score": 82,
+            "analysis": "Resume structure is well-formatted for ATS parsing with clear section headers and standard formatting.",
+            "critical_fixes": ["Consider using standard section headers", "Optimize font choices for better parsing"]
         },
         "keyword_optimization": {
-            "score": <integer 0-100>,
-            "analysis": "Strategic keyword usage and market alignment assessment",
-            "density_score": "<Optimal/Good/Moderate/Low/Poor>",
-            "relevance_score": "<High/Medium/Low>"
+            "score": 78,
+            "analysis": "Good use of industry-relevant keywords but could benefit from more technical terminology.",
+            "density_score": "Good",
+            "relevance_score": "High"
         },
         "content_impact": {
-            "score": <integer 0-100>,
-            "analysis": "Achievement presentation and storytelling effectiveness",
-            "quantification_level": "<Excellent/Good/Moderate/Minimal/None>",
-            "narrative_strength": "<Compelling/Clear/Adequate/Weak/Unclear>"
+            "score": 92,
+            "analysis": "Excellent quantification of achievements with clear STAR method implementation.",
+            "quantification_level": "Excellent",
+            "narrative_strength": "Compelling"
         },
         "professional_presentation": {
-            "score": <integer 0-100>,
-            "analysis": "Overall formatting, structure, and brand presentation",
-            "visual_appeal": "<Excellent/Good/Average/Poor>",
-            "brand_consistency": "<Strong/Moderate/Weak>"
+            "score": 88,
+            "analysis": "Professional layout with good visual hierarchy and appropriate length.",
+            "visual_appeal": "Excellent",
+            "brand_consistency": "Strong"
         }
     },
     "strengths": [
-        "Specific standout elements with impact assessment",
-        "Notable achievements and differentiators",
-        "Strong skill presentations and certifications"
+        "Strong quantification of achievements with specific metrics",
+        "Clear career progression and growth trajectory",
+        "Excellent technical skills presentation"
     ],
     "critical_issues": [
-        "High-priority problems affecting competitiveness",
-        "ATS parsing obstacles",
-        "Missing essential information or sections"
+        "Missing industry-specific keywords",
+        "Professional summary could be more impactful"
     ],
     "strategic_recommendations": [
         {
-            "priority": "<High/Medium/Low>",
-            "category": "<ATS/Content/Keywords/Presentation>",
-            "recommendation": "Specific actionable improvement",
-            "expected_impact": "Quantified improvement expectation",
-            "implementation": "Step-by-step guidance"
+            "priority": "High",
+            "category": "Keywords",
+            "recommendation": "Add more industry-specific technical terms",
+            "expected_impact": "15-20% improvement in ATS matching",
+            "implementation": "Research job postings in your field and identify commonly used technical terms"
         }
     ],
     "keyword_analysis": {
         "strong_matches": {
-            "technical_skills": ["Effectively used technical keywords"],
-            "soft_skills": ["Well-integrated soft skills"],
-            "industry_terms": ["Relevant industry terminology"]
+            "technical_skills": ["Python", "Data Analysis", "Machine Learning"],
+            "soft_skills": ["Leadership", "Communication", "Problem-solving"],
+            "industry_terms": ["Agile", "Scrum", "CI/CD"]
         },
         "missing_critical": {
-            "must_have": ["Essential keywords for the role/industry"],
-            "trending": ["Current market-relevant terms"],
-            "certifications": ["Missing but valuable certifications"]
+            "must_have": ["Cloud Computing", "DevOps", "Kubernetes"],
+            "trending": ["AI/ML", "Microservices", "Docker"],
+            "certifications": ["AWS", "Azure", "Google Cloud"]
         },
         "optimization_opportunities": {
-            "contextual_improvements": ["Keywords needing better context"],
-            "density_adjustments": ["Areas for keyword density optimization"],
-            "semantic_variations": ["Alternative keyword formulations"]
+            "contextual_improvements": ["Add context to technical skills"],
+            "density_adjustments": ["Increase keyword density in experience section"],
+            "semantic_variations": ["Use variations of key terms"]
         }
     },
     "industry_insights": {
-        "alignment_score": <integer 0-100>,
-        "market_trends": "Current industry hiring trends and preferences",
-        "competitive_positioning": "How this resume compares to market standards",
-        "future_proofing": "Recommendations for emerging industry requirements"
+        "alignment_score": 85,
+        "market_trends": "Current market shows high demand for cloud computing and AI/ML skills",
+        "competitive_positioning": "Resume is competitive but could benefit from cloud certifications",
+        "future_proofing": "Consider adding emerging technology skills like AI and automation"
     },
     "next_steps": {
-        "immediate_actions": ["Top 3 actions for quick wins"],
-        "medium_term_goals": ["Strategic improvements for next 30 days"],
-        "long_term_strategy": ["Career positioning recommendations"]
+        "immediate_actions": ["Add missing keywords", "Optimize professional summary", "Include relevant certifications"],
+        "medium_term_goals": ["Pursue industry certifications", "Quantify more achievements", "Expand technical skills section"],
+        "long_term_strategy": ["Build thought leadership presence", "Develop expertise in emerging technologies"]
     }
 }
 
-Provide specific, actionable insights with quantified impact projections where possible.
+Provide specific, actionable insights with clear recommendations.
 """
 
 def extract_text_from_pdf(uploaded_file):
+    """Extract text from PDF file"""
     try:
+        uploaded_file.seek(0)  # Reset file pointer
         with fitz.open(stream=uploaded_file.read(), filetype="pdf") as doc:
             text = ""
             for page in doc:
@@ -182,33 +158,58 @@ def extract_text_from_pdf(uploaded_file):
         return None
 
 def extract_text_from_docx(uploaded_file):
+    """Extract text from DOCX file"""
     try:
+        uploaded_file.seek(0)  # Reset file pointer
         return docx2txt.process(uploaded_file).strip()
     except Exception as e:
         st.error(f"DOCX processing error: {str(e)}")
         return None
 
+def clean_json_response(content):
+    """Clean and extract JSON from AI response"""
+    try:
+        # Remove any markdown formatting
+        content = content.strip()
+        
+        # Handle code blocks
+        if "```
+            start = content.find("```json") + 7
+            end = content.find("```
+            if end != -1:
+                content = content[start:end].strip()
+        elif "```" in content:
+            start = content.find("```
+            end = content.rfind("```")
+            if end != -1 and end > start:
+                content = content[start:end].strip()
+        
+        # Find JSON boundaries
+        start_brace = content.find("{")
+        end_brace = content.rfind("}") + 1
+        
+        if start_brace >= 0 and end_brace > start_brace:
+            json_content = content[start_brace:end_brace]
+            return json.loads(json_content)
+        else:
+            raise ValueError("No valid JSON found in response")
+            
+    except Exception as e:
+        st.error(f"JSON parsing error: {str(e)}")
+        return None
+
 def analyze_resume(resume_text, job_description="", industry="General"):
+    """Analyze resume using AI"""
     try:
         user_content = f"""
 RESUME CONTENT:
-{resume_text}
+{resume_text[:4000]}  # Truncate to avoid token limits
 
 TARGET INDUSTRY: {industry}
 
-JOB DESCRIPTION (if provided):
-{job_description if job_description.strip() else "No specific job description provided - perform comprehensive industry-general analysis"}
+JOB DESCRIPTION: {job_description if job_description.strip() else "General analysis"}
 
-ANALYSIS REQUEST:
-Please perform a comprehensive ATS and strategic career analysis of this resume. Focus on:
-1. Technical ATS compatibility and parsing optimization
-2. Strategic keyword alignment for the specified industry
-3. Content impact and competitive positioning
-4. Professional presentation and personal branding
-5. Market competitiveness assessment
-6. Actionable improvement roadmap
-
-Provide detailed, specific feedback following the enhanced JSON structure.
+Please analyze this resume and provide detailed feedback in the specified JSON format.
 """
         
         messages = [
@@ -217,100 +218,62 @@ Provide detailed, specific feedback following the enhanced JSON structure.
         ]
         
         payload = {
-            "model": "llama3-70b-8192",  # Using more powerful model
+            "model": "llama3-8b-8192",
             "messages": messages,
-            "temperature": 0.1,  # Lower temperature for more consistent analysis
-            "max_tokens": 4000
+            "temperature": 0.1,
+            "max_tokens": 3500
         }
 
-        response = requests.post(GROQ_API_URL, headers=HEADERS, json=payload)
+        response = requests.post(GROQ_API_URL, headers=HEADERS, json=payload, timeout=30)
         
         if response.status_code != 200:
-            st.error(f"API Error: {response.status_code} - {response.text}")
+            st.error(f"API Error: {response.status_code}")
             return None
 
         response_data = response.json()
         if "choices" not in response_data or not response_data["choices"]:
-            st.error("Invalid API response format")
+            st.error("Invalid API response")
             return None
 
         content = response_data["choices"][0]["message"]["content"]
-        
-        # FIXED JSON parsing - This was the problematic section
-        try:
-            content = content.strip()
-            
-            # Handle different markdown code block formats
-            if "```
-                # Extract content between ```json and ```
-                json_start = content.find("```json") + 7
-                json_end = content.find("```
-                if json_end != -1:
-                    content = content[json_start:json_end].strip()
-            elif "```" in content:
-                # Extract content between first ``````
-                first_backticks = content.find("```
-                if first_backticks != -1:
-                    remaining = content[first_backticks + 3:]
-                    last_backticks = remaining.rfind("```")
-                    if last_backticks != -1:
-                        content = remaining[:last_backticks].strip()
-            
-            # Find JSON boundaries
-            start_idx = content.find("{")
-            end_idx = content.rfind("}") + 1
-            
-            if start_idx >= 0 and end_idx > start_idx:
-                json_content = content[start_idx:end_idx]
-                return json.loads(json_content)
-            else:
-                raise json.JSONDecodeError("No valid JSON found", content, 0)
-                
-        except json.JSONDecodeError as e:
-            st.error(f"JSON parsing error: {str(e)}")
-            with st.expander("Raw API Response (for debugging)"):
-                st.code(content)
-            return None
+        return clean_json_response(content)
 
     except Exception as e:
         st.error(f"Analysis error: {str(e)}")
         return None
 
-def get_score_color_gradient(score):
-    """Enhanced color scheme with gradients"""
+def get_score_color(score):
+    """Get color scheme based on score"""
     if score >= 95:
-        return "#00C851", "#E8F5E8", "#004D1A"  # Excellent Green
+        return "#00C851", "#E8F5E8"  # Excellent Green
     elif score >= 85:
-        return "#007E33", "#E1F7E1", "#003D16"  # Strong Green
+        return "#007E33", "#E1F7E1"  # Strong Green
     elif score >= 75:
-        return "#0099CC", "#E1F4FF", "#003D5C"  # Professional Blue
+        return "#0099CC", "#E1F4FF"  # Professional Blue
     elif score >= 65:
-        return "#FF8800", "#FFF2E1", "#663300"  # Warning Orange
+        return "#FF8800", "#FFF2E1"  # Warning Orange
     elif score >= 55:
-        return "#FF4444", "#FFE1E1", "#660000"  # Alert Red
+        return "#FF4444", "#FFE1E1"  # Alert Red
     else:
-        return "#AA0000", "#FFCCCC", "#330000"  # Critical Red
+        return "#AA0000", "#FFCCCC"  # Critical Red
 
-def create_score_gauge(score, title):
-    """Create an interactive gauge chart"""
+def create_gauge_chart(score, title):
+    """Create gauge chart for scores"""
     fig = go.Figure(go.Indicator(
-        mode = "gauge+number+delta",
-        value = score,
-        domain = {'x': [0, 1], 'y': [0, 1]},
-        title = {'text': title, 'font': {'size': 20}},
-        delta = {'reference': 80, 'increasing': {'color': "green"}, 'decreasing': {'color': "red"}},
-        gauge = {
-            'axis': {'range': [None, 100], 'tickwidth': 1, 'tickcolor': "darkblue"},
+        mode="gauge+number+delta",
+        value=score,
+        domain={'x': [0, 1], 'y': [0, 1]},
+        title={'text': title, 'font': {'size': 16}},
+        delta={'reference': 80},
+        gauge={
+            'axis': {'range': [None, 100]},
             'bar': {'color': "darkblue"},
-            'bgcolor': "white",
-            'borderwidth': 2,
-            'bordercolor': "gray",
             'steps': [
-                {'range': [0, 55], 'color': '#FFE1E1'},
-                {'range': [55, 65], 'color': '#FFF2E1'},
-                {'range': [65, 75], 'color': '#E1F4FF'},
-                {'range': [75, 85], 'color': '#E1F7E1'},
-                {'range': [85, 100], 'color': '#E8F5E8'}
+                {'range': [0, 50], 'color': "#ffcccc"},
+                {'range': [50, 70], 'color': "#fff2e1"},
+                {'range': [70, 85], 'color': "#e1f4ff"},
+                {'range': [85, 95], 'color': "#e1f7e1"},
+                {'range': [95, 100], 'color': "#e8f5e8"}
             ],
             'threshold': {
                 'line': {'color': "red", 'width': 4},
@@ -320,11 +283,11 @@ def create_score_gauge(score, title):
         }
     ))
     
-    fig.update_layout(height=300, margin=dict(l=20, r=20, t=40, b=20))
+    fig.update_layout(height=250, margin=dict(l=20, r=20, t=40, b=20))
     return fig
 
 def create_radar_chart(analysis):
-    """Create a radar chart for different analysis dimensions"""
+    """Create radar chart for analysis breakdown"""
     categories = ['ATS Compatibility', 'Keywords', 'Content Impact', 'Presentation']
     scores = [
         analysis['detailed_analysis']['ats_compatibility']['score'],
@@ -338,223 +301,155 @@ def create_radar_chart(analysis):
         theta=categories,
         fill='toself',
         fillcolor='rgba(0, 123, 255, 0.2)',
-        line=dict(color='rgb(0, 123, 255)', width=3),
-        marker=dict(size=8)
+        line=dict(color='rgb(0, 123, 255)', width=2)
     ))
     
     fig.update_layout(
         polar=dict(
-            radialaxis=dict(visible=True, range=[0, 100], tickfont=dict(size=10)),
-            angularaxis=dict(tickfont=dict(size=12))
+            radialaxis=dict(visible=True, range=[0, 100])
         ),
         showlegend=False,
-        height=400,
-        title="Resume Analysis Breakdown"
+        height=350,
+        title="Analysis Breakdown"
     )
     return fig
 
-def display_enhanced_results(analysis):
-    # Ultra-modern CSS styling
+def display_results(analysis):
+    """Display analysis results with premium UI"""
+    
+    # Custom CSS for premium styling
     st.markdown("""
-        <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
-        
-        .main-container {
-            font-family: 'Inter', sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            padding: 0;
-            margin: 0;
-        }
-        
-        .glass-card {
-            background: rgba(255, 255, 255, 0.95);
-            backdrop-filter: blur(10px);
-            border-radius: 20px;
-            padding: 30px;
-            margin: 20px 0;
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-        }
-        
-        .score-hero {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            padding: 40px;
-            border-radius: 25px;
-            text-align: center;
-            margin: 30px 0;
-            box-shadow: 0 15px 35px rgba(102, 126, 234, 0.3);
-            position: relative;
-            overflow: hidden;
-        }
-        
-        .score-hero::before {
-            content: '';
-            position: absolute;
-            top: -50%;
-            left: -50%;
-            width: 200%;
-            height: 200%;
-            background: linear-gradient(45deg, transparent, rgba(255,255,255,0.1), transparent);
-            transform: rotate(45deg);
-            animation: shine 3s infinite;
-        }
-        
-        @keyframes shine {
-            0% { transform: translateX(-100%) rotate(45deg); }
-            100% { transform: translateX(100%) rotate(45deg); }
-        }
-        
-        .metric-card {
-            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
-            padding: 25px;
-            border-radius: 15px;
-            margin: 15px 0;
-            border-left: 5px solid;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.08);
-            transition: transform 0.3s ease, box-shadow 0.3s ease;
-        }
-        
-        .metric-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 10px 25px rgba(0,0,0,0.15);
-        }
-        
-        .strength-card {
-            background: linear-gradient(135deg, #d4f6d4 0%, #a8e6a3 100%);
-            border-left-color: #28a745;
-            border: 1px solid #28a74530;
-        }
-        
-        .issue-card {
-            background: linear-gradient(135deg, #ffe1e1 0%, #ffcccc 100%);
-            border-left-color: #dc3545;
-            border: 1px solid #dc354530;
-        }
-        
-        .recommendation-card {
-            background: linear-gradient(135deg, #e8e2ff 0%, #d6c7ff 100%);
-            border-left-color: #6f42c1;
-            border: 1px solid #6f42c130;
-        }
-        
-        .section-title {
-            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            font-size: 2rem;
-            font-weight: 700;
-            margin: 30px 0 20px 0;
-            text-align: center;
-        }
-        
-        .priority-high {
-            border-left: 5px solid #dc3545;
-            background: linear-gradient(135deg, #ffe1e1 0%, #ffcccc 100%);
-        }
-        
-        .priority-medium {
-            border-left: 5px solid #ffc107;
-            background: linear-gradient(135deg, #fff3cd 0%, #ffeaa7 100%);
-        }
-        
-        .priority-low {
-            border-left: 5px solid #17a2b8;
-            background: linear-gradient(135deg, #d1ecf1 0%, #bee5eb 100%);
-        }
-        
-        .keyword-tag {
-            display: inline-block;
-            padding: 8px 15px;
-            margin: 5px;
-            border-radius: 20px;
-            font-weight: 500;
-            font-size: 0.9rem;
-        }
-        
-        .keyword-strong {
-            background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
-            color: white;
-        }
-        
-        .keyword-missing {
-            background: linear-gradient(135deg, #dc3545 0%, #e74c3c 100%);
-            color: white;
-        }
-        
-        .keyword-opportunity {
-            background: linear-gradient(135deg, #ffc107 0%, #fd7e14 100%);
-            color: white;
-        }
-        
-        .stats-container {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 20px;
-            margin: 20px 0;
-        }
-        
-        .stat-box {
-            background: white;
-            padding: 20px;
-            border-radius: 15px;
-            text-align: center;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
-            border-top: 4px solid;
-        }
-        </style>
+    <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+    
+    .main-container {
+        font-family: 'Inter', sans-serif;
+    }
+    
+    .score-hero {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 2rem;
+        border-radius: 20px;
+        text-align: center;
+        margin: 2rem 0;
+        box-shadow: 0 10px 30px rgba(102, 126, 234, 0.3);
+    }
+    
+    .metric-card {
+        background: white;
+        padding: 1.5rem;
+        border-radius: 15px;
+        margin: 1rem 0;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        border-left: 4px solid;
+        transition: transform 0.2s ease;
+    }
+    
+    .metric-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(0,0,0,0.15);
+    }
+    
+    .strength-card {
+        border-left-color: #28a745;
+        background: linear-gradient(135deg, #f8fff8 0%, #e8f5e8 100%);
+    }
+    
+    .issue-card {
+        border-left-color: #dc3545;
+        background: linear-gradient(135deg, #fff8f8 0%, #ffe8e8 100%);
+    }
+    
+    .recommendation-card {
+        border-left-color: #6f42c1;
+        background: linear-gradient(135deg, #f8f4ff 0%, #ede2ff 100%);
+    }
+    
+    .keyword-tag {
+        display: inline-block;
+        padding: 0.4rem 0.8rem;
+        margin: 0.2rem;
+        border-radius: 20px;
+        font-size: 0.85rem;
+        font-weight: 500;
+    }
+    
+    .keyword-strong { background: #28a745; color: white; }
+    .keyword-missing { background: #dc3545; color: white; }
+    .keyword-opportunity { background: #ffc107; color: #333; }
+    
+    .section-title {
+        background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        font-size: 1.8rem;
+        font-weight: 700;
+        margin: 2rem 0 1rem 0;
+        text-align: center;
+    }
+    
+    .stat-box {
+        background: white;
+        padding: 1.5rem;
+        border-radius: 12px;
+        text-align: center;
+        box-shadow: 0 3px 10px rgba(0,0,0,0.1);
+        border-top: 3px solid;
+    }
+    </style>
     """, unsafe_allow_html=True)
 
     # Hero Score Section
     score = analysis['ats_score']
-    primary_color, bg_color, text_color = get_score_color_gradient(score)
+    primary_color, bg_color = get_score_color(score)
     
     st.markdown(f"""
-        <div class='score-hero'>
-            <h1 style='font-size: 4rem; margin: 0; font-weight: 700;'>{score}</h1>
-            <h2 style='font-size: 1.5rem; margin: 10px 0; opacity: 0.9;'>ATS Compatibility Score</h2>
-            <h3 style='font-size: 1.3rem; margin: 10px 0; opacity: 0.8;'>{analysis['score_interpretation']}</h3>
-            <p style='font-size: 1.1rem; margin: 20px 0 0 0; line-height: 1.6;'>{analysis['executive_summary']}</p>
-        </div>
+    <div class='score-hero'>
+        <h1 style='font-size: 3rem; margin: 0;'>{score}</h1>
+        <h2 style='margin: 0.5rem 0;'>ATS Compatibility Score</h2>
+        <h3 style='margin: 0.5rem 0; opacity: 0.9;'>{analysis['score_interpretation']}</h3>
+        <p style='margin: 1rem 0 0 0; line-height: 1.6; opacity: 0.95;'>{analysis['executive_summary']}</p>
+    </div>
     """, unsafe_allow_html=True)
 
-    # Key Statistics
+    # Key Metrics
     col1, col2, col3, col4 = st.columns(4)
     
     with col1:
         confidence = analysis.get('confidence_level', 85)
         st.markdown(f"""
-            <div class='stat-box' style='border-top-color: #007bff;'>
-                <h3 style='color: #007bff; margin: 0;'>{confidence}%</h3>
-                <p style='margin: 5px 0 0 0; color: #6c757d;'>Analysis Confidence</p>
-            </div>
+        <div class='stat-box' style='border-top-color: #007bff;'>
+            <h3 style='color: #007bff; margin: 0;'>{confidence}%</h3>
+            <p style='margin: 0.5rem 0 0 0; color: #666;'>Confidence</p>
+        </div>
         """, unsafe_allow_html=True)
     
     with col2:
         market_comp = analysis.get('market_competitiveness', 'Competitive')
         st.markdown(f"""
-            <div class='stat-box' style='border-top-color: #28a745;'>
-                <h3 style='color: #28a745; margin: 0;'>{market_comp}</h3>
-                <p style='margin: 5px 0 0 0; color: #6c757d;'>Market Position</p>
-            </div>
+        <div class='stat-box' style='border-top-color: #28a745;'>
+            <h3 style='color: #28a745; margin: 0;'>{market_comp}</h3>
+            <p style='margin: 0.5rem 0 0 0; color: #666;'>Market Position</p>
+        </div>
         """, unsafe_allow_html=True)
     
     with col3:
         industry_score = analysis.get('industry_insights', {}).get('alignment_score', 75)
         st.markdown(f"""
-            <div class='stat-box' style='border-top-color: #6f42c1;'>
-                <h3 style='color: #6f42c1; margin: 0;'>{industry_score}%</h3>
-                <p style='margin: 5px 0 0 0; color: #6c757d;'>Industry Alignment</p>
-            </div>
+        <div class='stat-box' style='border-top-color: #6f42c1;'>
+            <h3 style='color: #6f42c1; margin: 0;'>{industry_score}%</h3>
+            <p style='margin: 0.5rem 0 0 0; color: #666;'>Industry Fit</p>
+        </div>
         """, unsafe_allow_html=True)
     
     with col4:
-        improvements = len(analysis.get('strategic_recommendations', []))
+        recommendations = len(analysis.get('strategic_recommendations', []))
         st.markdown(f"""
-            <div class='stat-box' style='border-top-color: #dc3545;'>
-                <h3 style='color: #dc3545; margin: 0;'>{improvements}</h3>
-                <p style='margin: 5px 0 0 0; color: #6c757d;'>Recommendations</p>
-            </div>
+        <div class='stat-box' style='border-top-color: #dc3545;'>
+            <h3 style='color: #dc3545; margin: 0;'>{recommendations}</h3>
+            <p style='margin: 0.5rem 0 0 0; color: #666;'>Action Items</p>
+        </div>
         """, unsafe_allow_html=True)
 
     # Interactive Charts
@@ -563,17 +458,16 @@ def display_enhanced_results(analysis):
     col1, col2 = st.columns(2)
     
     with col1:
-        gauge_fig = create_score_gauge(score, "Overall ATS Score")
+        gauge_fig = create_gauge_chart(score, "Overall ATS Score")
         st.plotly_chart(gauge_fig, use_container_width=True)
     
     with col2:
         radar_fig = create_radar_chart(analysis)
         st.plotly_chart(radar_fig, use_container_width=True)
 
-    # Detailed Analysis with Enhanced Cards
-    st.markdown("<h2 class='section-title'>🔍 Detailed Analysis Breakdown</h2>", unsafe_allow_html=True)
+    # Detailed Analysis Tabs
+    st.markdown("<h2 class='section-title'>🔍 Detailed Analysis</h2>", unsafe_allow_html=True)
     
-    # Create tabs for detailed analysis
     tab1, tab2, tab3, tab4 = st.tabs([
         "🤖 ATS Compatibility", 
         "🎯 Keywords", 
@@ -584,153 +478,121 @@ def display_enhanced_results(analysis):
     with tab1:
         ats_data = analysis['detailed_analysis']['ats_compatibility']
         st.markdown(f"""
-            <div class='metric-card' style='border-left-color: {primary_color};'>
-                <h4>Score: {ats_data['score']}/100</h4>
-                <p>{ats_data['analysis']}</p>
-            </div>
+        <div class='metric-card' style='border-left-color: {primary_color};'>
+            <h4>Score: {ats_data['score']}/100</h4>
+            <p>{ats_data['analysis']}</p>
+        </div>
         """, unsafe_allow_html=True)
         
-        if 'critical_fixes' in ats_data:
-            st.subheader("🚨 Critical Fixes Needed")
+        if 'critical_fixes' in ats_data and ats_data['critical_fixes']:
+            st.subheader("🚨 Critical Fixes")
             for fix in ats_data['critical_fixes']:
-                st.error(fix)
+                st.error(f"• {fix}")
     
     with tab2:
         keyword_data = analysis['detailed_analysis']['keyword_optimization']
         st.markdown(f"""
-            <div class='metric-card' style='border-left-color: #6f42c1;'>
-                <h4>Score: {keyword_data['score']}/100</h4>
-                <p>{keyword_data['analysis']}</p>
-                <p><strong>Density:</strong> {keyword_data.get('density_score', 'N/A')} | 
-                   <strong>Relevance:</strong> {keyword_data.get('relevance_score', 'N/A')}</p>
-            </div>
+        <div class='metric-card' style='border-left-color: #6f42c1;'>
+            <h4>Score: {keyword_data['score']}/100</h4>
+            <p>{keyword_data['analysis']}</p>
+        </div>
         """, unsafe_allow_html=True)
     
     with tab3:
         content_data = analysis['detailed_analysis']['content_impact']
         st.markdown(f"""
-            <div class='metric-card' style='border-left-color: #28a745;'>
-                <h4>Score: {content_data['score']}/100</h4>
-                <p>{content_data['analysis']}</p>
-                <p><strong>Quantification:</strong> {content_data.get('quantification_level', 'N/A')} | 
-                   <strong>Narrative:</strong> {content_data.get('narrative_strength', 'N/A')}</p>
-            </div>
+        <div class='metric-card' style='border-left-color: #28a745;'>
+            <h4>Score: {content_data['score']}/100</h4>
+            <p>{content_data['analysis']}</p>
+        </div>
         """, unsafe_allow_html=True)
     
     with tab4:
         presentation_data = analysis['detailed_analysis']['professional_presentation']
         st.markdown(f"""
-            <div class='metric-card' style='border-left-color: #17a2b8;'>
-                <h4>Score: {presentation_data['score']}/100</h4>
-                <p>{presentation_data['analysis']}</p>
-                <p><strong>Visual Appeal:</strong> {presentation_data.get('visual_appeal', 'N/A')} | 
-                   <strong>Brand Consistency:</strong> {presentation_data.get('brand_consistency', 'N/A')}</p>
-            </div>
+        <div class='metric-card' style='border-left-color: #17a2b8;'>
+            <h4>Score: {presentation_data['score']}/100</h4>
+            <p>{presentation_data['analysis']}</p>
+        </div>
         """, unsafe_allow_html=True)
 
-    # Strengths and Issues with Enhanced Design
+    # Strengths and Issues
     col1, col2 = st.columns(2)
     
     with col1:
-        st.markdown("<h3 style='color: #28a745;'>💪 Key Strengths</h3>")
+        st.markdown("### 💪 Key Strengths")
         for strength in analysis['strengths']:
             st.markdown(f"""
-                <div class='metric-card strength-card'>
-                    <strong>✅</strong> {strength}
-                </div>
+            <div class='metric-card strength-card'>
+                <strong>✅</strong> {strength}
+            </div>
             """, unsafe_allow_html=True)
     
     with col2:
-        st.markdown("<h3 style='color: #dc3545;'>🚨 Critical Issues</h3>")
+        st.markdown("### 🚨 Critical Issues")
         for issue in analysis['critical_issues']:
             st.markdown(f"""
-                <div class='metric-card issue-card'>
-                    <strong>❌</strong> {issue}
-                </div>
+            <div class='metric-card issue-card'>
+                <strong>❌</strong> {issue}
+            </div>
             """, unsafe_allow_html=True)
 
     # Strategic Recommendations
-    st.markdown("<h2 class='section-title'>🚀 Strategic Improvement Roadmap</h2>")
+    st.markdown("<h2 class='section-title'>🚀 Strategic Recommendations</h2>")
     
-    if 'strategic_recommendations' in analysis:
-        for idx, rec in enumerate(analysis['strategic_recommendations'], 1):
-            priority = rec.get('priority', 'Medium')
-            priority_class = f"priority-{priority.lower()}"
-            
-            st.markdown(f"""
-                <div class='metric-card {priority_class}'>
-                    <h4>{idx}. {rec.get('category', 'General')} - {priority} Priority</h4>
-                    <p><strong>Recommendation:</strong> {rec.get('recommendation', '')}</p>
-                    <p><strong>Expected Impact:</strong> {rec.get('expected_impact', '')}</p>
-                    <p><strong>Implementation:</strong> {rec.get('implementation', '')}</p>
-                </div>
-            """, unsafe_allow_html=True)
-    else:
-        # Fallback to simple recommendations
-        for idx, rec in enumerate(analysis.get('improvement_recommendations', []), 1):
-            st.markdown(f"""
-                <div class='metric-card recommendation-card'>
-                    <strong>{idx}.</strong> {rec}
-                </div>
-            """, unsafe_allow_html=True)
+    for idx, rec in enumerate(analysis.get('strategic_recommendations', []), 1):
+        priority = rec.get('priority', 'Medium')
+        st.markdown(f"""
+        <div class='metric-card recommendation-card'>
+            <h4>{idx}. {rec.get('category', 'General')} - {priority} Priority</h4>
+            <p><strong>Recommendation:</strong> {rec.get('recommendation', '')}</p>
+            <p><strong>Expected Impact:</strong> {rec.get('expected_impact', '')}</p>
+            <p><strong>How to implement:</strong> {rec.get('implementation', '')}</p>
+        </div>
+        """, unsafe_allow_html=True)
 
-    # Enhanced Keyword Analysis
-    st.markdown("<h2 class='section-title'>🎯 Advanced Keyword Analysis</h2>")
+    # Keyword Analysis
+    st.markdown("<h2 class='section-title'>🎯 Keyword Analysis</h2>")
     
     keyword_data = analysis['keyword_analysis']
     
-    # Strong Keywords
-    st.subheader("✅ Strong Keyword Matches")
-    if 'strong_matches' in keyword_data and isinstance(keyword_data['strong_matches'], dict):
-        for category, keywords in keyword_data['strong_matches'].items():
-            st.write(f"**{category.replace('_', ' ').title()}:**")
-            for keyword in keywords:
+    # Display keywords in organized sections
+    col1, col2, col3 = st.columns(3)
+    
+    with col1:
+        st.subheader("✅ Strong Matches")
+        strong_matches = keyword_data.get('strong_matches', {})
+        if isinstance(strong_matches, dict):
+            for category, keywords in strong_matches.items():
+                for keyword in keywords[:5]:  # Limit display
+                    st.markdown(f"<span class='keyword-tag keyword-strong'>{keyword}</span>", unsafe_allow_html=True)
+        else:
+            for keyword in strong_matches[:5]:
                 st.markdown(f"<span class='keyword-tag keyword-strong'>{keyword}</span>", unsafe_allow_html=True)
-    else:
-        for keyword in keyword_data.get('strong_matches', []):
-            st.markdown(f"<span class='keyword-tag keyword-strong'>{keyword}</span>", unsafe_allow_html=True)
     
-    # Missing Keywords
-    st.subheader("❌ Missing Critical Keywords")
-    if 'missing_critical' in keyword_data and isinstance(keyword_data['missing_critical'], dict):
-        for category, keywords in keyword_data['missing_critical'].items():
-            st.write(f"**{category.replace('_', ' ').title()}:**")
-            for keyword in keywords:
+    with col2:
+        st.subheader("❌ Missing Critical")
+        missing_critical = keyword_data.get('missing_critical', {})
+        if isinstance(missing_critical, dict):
+            for category, keywords in missing_critical.items():
+                for keyword in keywords[:5]:  # Limit display
+                    st.markdown(f"<span class='keyword-tag keyword-missing'>{keyword}</span>", unsafe_allow_html=True)
+        else:
+            for keyword in missing_critical[:5]:
                 st.markdown(f"<span class='keyword-tag keyword-missing'>{keyword}</span>", unsafe_allow_html=True)
-    else:
-        for keyword in keyword_data.get('missing_critical', []):
-            st.markdown(f"<span class='keyword-tag keyword-missing'>{keyword}</span>", unsafe_allow_html=True)
     
-    # Optimization Opportunities
-    st.subheader("🔧 Optimization Opportunities")
-    if 'optimization_opportunities' in keyword_data and isinstance(keyword_data['optimization_opportunities'], dict):
-        for category, keywords in keyword_data['optimization_opportunities'].items():
-            st.write(f"**{category.replace('_', ' ').title()}:**")
-            for keyword in keywords:
+    with col3:
+        st.subheader("🔧 Opportunities")
+        opportunities = keyword_data.get('optimization_opportunities', {})
+        if isinstance(opportunities, dict):
+            for category, keywords in opportunities.items():
+                for keyword in keywords[:5]:  # Limit display
+                    st.markdown(f"<span class='keyword-tag keyword-opportunity'>{keyword}</span>", unsafe_allow_html=True)
+        else:
+            for keyword in opportunities[:5]:
                 st.markdown(f"<span class='keyword-tag keyword-opportunity'>{keyword}</span>", unsafe_allow_html=True)
-    else:
-        for keyword in keyword_data.get('optimization_opportunities', []):
-            st.markdown(f"<span class='keyword-tag keyword-opportunity'>{keyword}</span>", unsafe_allow_html=True)
 
-    # Industry Insights
-    if 'industry_insights' in analysis:
-        st.markdown("<h2 class='section-title'>🏢 Industry Insights & Market Intelligence</h2>")
-        insights = analysis['industry_insights']
-        
-        st.markdown(f"""
-            <div class='glass-card'>
-                <h4>Market Trends & Analysis</h4>
-                <p>{insights.get('market_trends', 'No market trends data available.')}</p>
-                
-                <h4>Competitive Positioning</h4>
-                <p>{insights.get('competitive_positioning', 'No competitive positioning data available.')}</p>
-                
-                <h4>Future-Proofing Recommendations</h4>
-                <p>{insights.get('future_proofing', 'No future-proofing recommendations available.')}</p>
-            </div>
-        """, unsafe_allow_html=True)
-
-    # Next Steps Action Plan
+    # Action Plan
     if 'next_steps' in analysis:
         st.markdown("<h2 class='section-title'>📋 Your Action Plan</h2>")
         next_steps = analysis['next_steps']
@@ -738,186 +600,147 @@ def display_enhanced_results(analysis):
         col1, col2, col3 = st.columns(3)
         
         with col1:
-            st.markdown("### 🚀 Immediate Actions (Today)")
-            for action in next_steps.get('immediate_actions', []):
-                st.markdown(f"""
-                    <div class='metric-card priority-high'>
-                        • {action}
-                    </div>
-                """, unsafe_allow_html=True)
+            st.markdown("#### 🚀 Immediate (Today)")
+            for action in next_steps.get('immediate_actions', [])[:3]:
+                st.success(f"• {action}")
         
         with col2:
-            st.markdown("### 📈 Medium-term Goals (30 Days)")
-            for goal in next_steps.get('medium_term_goals', []):
-                st.markdown(f"""
-                    <div class='metric-card priority-medium'>
-                        • {goal}
-                    </div>
-                """, unsafe_allow_html=True)
+            st.markdown("#### 📈 Short-term (30 days)")
+            for goal in next_steps.get('medium_term_goals', [])[:3]:
+                st.warning(f"• {goal}")
         
         with col3:
-            st.markdown("### 🎯 Long-term Strategy")
-            for strategy in next_steps.get('long_term_strategy', []):
-                st.markdown(f"""
-                    <div class='metric-card priority-low'>
-                        • {strategy}
-                    </div>
-                """, unsafe_allow_html=True)
+            st.markdown("#### 🎯 Long-term")
+            for strategy in next_steps.get('long_term_strategy', [])[:3]:
+                st.info(f"• {strategy}")
 
 def main():
     st.set_page_config(
-        page_title="Elite ATS Resume Analyzer Pro", 
+        page_title="Elite ATS Resume Analyzer", 
         layout="wide",
-        page_icon="🚀",
-        initial_sidebar_state="expanded"
+        page_icon="🚀"
     )
     
-    # Main app styling with glassmorphism effect
+    # Main styling
     st.markdown("""
-        <style>
-        .main {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh;
-        }
-        .stApp {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        }
-        .stButton > button {
-            background: linear-gradient(45deg, #FF6B6B, #4ECDC4);
-            color: white;
-            padding: 1rem 2rem;
-            border-radius: 30px;
-            border: none;
-            font-weight: 600;
-            font-size: 1.2rem;
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            width: 100%;
-            box-shadow: 0 10px 20px rgba(0,0,0,0.2);
-        }
-        .stButton > button:hover {
-            transform: translateY(-3px) scale(1.02);
-            box-shadow: 0 15px 30px rgba(0,0,0,0.3);
-            background: linear-gradient(45deg, #FF5722, #009688);
-        }
-        .upload-zone {
-            background: rgba(255, 255, 255, 0.1);
-            backdrop-filter: blur(10px);
-            padding: 3rem;
-            border-radius: 25px;
-            margin: 2rem 0;
-            border: 2px dashed rgba(255, 255, 255, 0.3);
-            transition: all 0.3s ease;
-        }
-        .upload-zone:hover {
-            border-color: rgba(255, 255, 255, 0.6);
-            background: rgba(255, 255, 255, 0.15);
-        }
-        .header-container {
-            text-align: center;
-            padding: 3rem 0;
-            background: rgba(255, 255, 255, 0.1);
-            backdrop-filter: blur(10px);
-            border-radius: 25px;
-            margin: 2rem 0;
-        }
-        </style>
+    <style>
+    .main {
+        background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+        min-height: 100vh;
+    }
+    
+    .stButton > button {
+        background: linear-gradient(45deg, #667eea, #764ba2);
+        color: white;
+        padding: 0.75rem 2rem;
+        border-radius: 25px;
+        border: none;
+        font-weight: 600;
+        font-size: 1.1rem;
+        transition: all 0.3s ease;
+        width: 100%;
+    }
+    
+    .stButton > button:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px rgba(102, 126, 234, 0.3);
+    }
+    
+    .upload-area {
+        background: white;
+        padding: 2rem;
+        border-radius: 20px;
+        margin: 2rem 0;
+        box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+    }
+    
+    .header-section {
+        text-align: center;
+        padding: 2rem 0;
+        background: white;
+        border-radius: 20px;
+        margin: 2rem 0;
+        box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+    }
+    </style>
     """, unsafe_allow_html=True)
 
-    # Animated header
+    # Header
     st.markdown("""
-        <div class='header-container'>
-            <h1 style='background: linear-gradient(45deg, #FFD700, #FFA500, #FF69B4, #00CED1); 
-                       -webkit-background-clip: text; -webkit-text-fill-color: transparent; 
-                       font-size: 4rem; margin-bottom: 0; font-weight: 800; 
-                       animation: glow 2s ease-in-out infinite alternate;'>
-                🚀 Elite ATS Resume Analyzer Pro
-            </h1>
-            <p style='font-size: 1.5rem; color: rgba(255,255,255,0.9); margin-top: 1rem; font-weight: 300;'>
-                Transform your resume with AI-powered insights and strategic career intelligence
-            </p>
-        </div>
-        
-        <style>
-        @keyframes glow {
-            from { text-shadow: 0 0 20px rgba(255,255,255,0.5); }
-            to { text-shadow: 0 0 30px rgba(255,255,255,0.8), 0 0 40px rgba(255,215,0,0.5); }
-        }
-        </style>
+    <div class='header-section'>
+        <h1 style='background: linear-gradient(45deg, #667eea, #764ba2, #f093fb); 
+                   -webkit-background-clip: text; -webkit-text-fill-color: transparent; 
+                   font-size: 3rem; margin: 0; font-weight: 800;'>
+            🚀 Elite ATS Resume Analyzer
+        </h1>
+        <p style='font-size: 1.2rem; color: #666; margin: 1rem 0 0 0;'>
+            Transform your resume with AI-powered insights and get ahead in your career
+        </p>
+    </div>
     """, unsafe_allow_html=True)
 
-    # Sidebar for additional options
+    # Sidebar
     with st.sidebar:
-        st.markdown("### 🎯 Analysis Options")
+        st.markdown("### 🎯 Analysis Settings")
         
         industry = st.selectbox(
             "Target Industry",
-            ["General", "Technology", "Finance", "Healthcare", "Marketing", "Sales", 
-             "Consulting", "Engineering", "Education", "Legal", "Creative", "Operations"]
+            ["General", "Technology", "Finance", "Healthcare", "Marketing", 
+             "Sales", "Consulting", "Engineering", "Education", "Legal"]
         )
         
-        analysis_depth = st.select_slider(
-            "Analysis Depth",
-            options=["Quick", "Standard", "Comprehensive", "Executive"],
-            value="Comprehensive"
-        )
-        
-        st.markdown("### 📊 Features")
-        st.info("✅ Advanced ATS Compatibility")
+        st.markdown("### ✨ Features")
+        st.info("✅ Advanced ATS Compatibility Check")
         st.info("✅ Strategic Keyword Analysis")
-        st.info("✅ Market Intelligence")
-        st.info("✅ Interactive Visualizations")
-        st.info("✅ Actionable Roadmap")
+        st.info("✅ Content Impact Assessment")
+        st.info("✅ Professional Presentation Review")
+        st.info("✅ Actionable Improvement Plan")
 
-    # Main upload area
-    st.markdown("<div class='upload-zone'>", unsafe_allow_html=True)
+    # Upload Area
+    st.markdown("<div class='upload-area'>", unsafe_allow_html=True)
     
-    col1, col2 = st.columns([3, 2])
+    col1, col2 = st.columns([2, 1])
     
     with col1:
         st.markdown("### 📤 Upload Your Resume")
         resume_file = st.file_uploader(
-            "", 
-            type=["pdf", "docx"], 
-            help="Upload PDF or DOCX format (Max 10MB)"
+            "",
+            type=["pdf", "docx"],
+            help="Upload your resume in PDF or DOCX format"
         )
-        
+    
     with col2:
         st.markdown("### 💼 Job Description (Optional)")
         job_description = st.text_area(
-            "", 
-            height=200, 
-            placeholder="Paste the target job description here for focused analysis...",
-            help="Including a job description will provide targeted recommendations"
+            "",
+            height=150,
+            placeholder="Paste job description for targeted analysis...",
+            help="Adding a job description provides more targeted recommendations"
         )
     
     st.markdown("</div>", unsafe_allow_html=True)
 
+    # Analysis
     if resume_file:
-        # File info
-        file_details = {
-            "filename": resume_file.name,
-            "filetype": resume_file.type,
-            "filesize": resume_file.size
-        }
-        
         st.markdown(f"""
-            <div style='background: rgba(255,255,255,0.1); padding: 1rem; border-radius: 15px; margin: 1rem 0;'>
-                <p style='color: white; margin: 0;'>
-                    📄 <strong>{file_details['filename']}</strong> 
-                    ({file_details['filesize']/1024:.1f} KB)
-                </p>
-            </div>
+        <div style='background: white; padding: 1rem; border-radius: 10px; margin: 1rem 0;'>
+            <p style='margin: 0; color: #666;'>
+                📄 File: <strong>{resume_file.name}</strong> 
+                ({resume_file.size/1024:.1f} KB)
+            </p>
+        </div>
         """, unsafe_allow_html=True)
         
-        if st.button("🔍 Analyze Resume with AI"):
-            with st.spinner("🤖 Running advanced AI analysis... This may take up to 60 seconds"):
-                progress_bar = st.progress(0)
+        if st.button("🔍 Analyze Resume"):
+            with st.spinner("🤖 Analyzing your resume with advanced AI... Please wait"):
                 
-                # Simulate progress for better UX
-                for i in range(20):
-                    progress_bar.progress((i + 1) * 5)
-                    
-                # Extract text based on file type
+                # Progress simulation
+                progress_bar = st.progress(0)
+                for i in range(100):
+                    time.sleep(0.01)
+                    progress_bar.progress(i + 1)
+                
+                # Extract text
                 if resume_file.type == "application/pdf":
                     resume_text = extract_text_from_pdf(resume_file)
                 else:
@@ -925,30 +748,20 @@ def main():
 
                 if resume_text:
                     analysis = analyze_resume(resume_text, job_description, industry)
-                    progress_bar.progress(100)
                     
                     if analysis:
-                        st.success("✅ Analysis complete! Here are your results:")
-                        display_enhanced_results(analysis)
-                        
-                        # Download report option
-                        st.markdown("---")
-                        if st.button("📥 Generate Detailed PDF Report"):
-                            st.info("PDF report generation feature coming soon!")
+                        st.success("✅ Analysis complete! Here are your personalized insights:")
+                        display_results(analysis)
                     else:
-                        st.error("❌ Failed to analyze resume. Please try again or check your file format.")
+                        st.error("❌ Analysis failed. Please try again or check your file.")
                 else:
-                    st.error("❌ Failed to extract text from the resume. Please check the file and try again.")
+                    st.error("❌ Could not extract text from file. Please check the format.")
 
     # Footer
     st.markdown("""
-        <div style='text-align: center; padding: 2rem; margin-top: 3rem; 
-                    background: rgba(255,255,255,0.1); border-radius: 15px;'>
-            <p style='color: rgba(255,255,255,0.7); margin: 0;'>
-                Made with ❤️ using Streamlit and Advanced AI • 
-                © 2024 Elite Resume Analyzer Pro
-            </p>
-        </div>
+    <div style='text-align: center; padding: 2rem; margin-top: 3rem; color: #666;'>
+        <p>Made with ❤️ using Streamlit • Enhanced with AI-powered analysis</p>
+    </div>
     """, unsafe_allow_html=True)
 
 if __name__ == "__main__":
