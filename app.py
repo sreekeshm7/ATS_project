@@ -236,14 +236,27 @@ Provide detailed, specific feedback following the enhanced JSON structure.
 
         content = response_data["choices"][0]["message"]["content"]
         
-        # Enhanced JSON parsing - FIXED THE SYNTAX ERROR HERE
+        # FIXED JSON parsing - This was the problematic section
         try:
             content = content.strip()
-            if "```
-                content = content.split("```json")[1].split("```
-            elif "```" in content:
-                content = content.split("``````")[0]
             
+            # Handle different markdown code block formats
+            if "```
+                # Extract content between ```json and ```
+                json_start = content.find("```json") + 7
+                json_end = content.find("```
+                if json_end != -1:
+                    content = content[json_start:json_end].strip()
+            elif "```" in content:
+                # Extract content between first ``````
+                first_backticks = content.find("```
+                if first_backticks != -1:
+                    remaining = content[first_backticks + 3:]
+                    last_backticks = remaining.rfind("```")
+                    if last_backticks != -1:
+                        content = remaining[:last_backticks].strip()
+            
+            # Find JSON boundaries
             start_idx = content.find("{")
             end_idx = content.rfind("}") + 1
             
