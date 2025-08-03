@@ -236,7 +236,7 @@ Provide detailed, specific feedback following the enhanced JSON structure.
 
         content = response_data["choices"][0]["message"]["content"]
         
-        # Enhanced JSON parsing
+        # Enhanced JSON parsing - FIXED THE SYNTAX ERROR HERE
         try:
             content = content.strip()
             if "```
@@ -940,4 +940,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-
