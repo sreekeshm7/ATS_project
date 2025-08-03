@@ -78,7 +78,7 @@ def extract_text_from_docx(uploaded_file):
         st.error(f"DOCX processing error: {e}")
         return None
 
-# ========= AI ANALYSIS WITH BULLETPROOF JSON STRIP =========
+# ========= AI ANALYSIS WITH SAFE JSON CLEAN =========
 def analyze_resume(resume_text, job_description=""):
     try:
         user_prompt = f"""
@@ -104,25 +104,28 @@ Please provide your JSON analysis.
             st.error(f"API Error: {response.status_code} - {response.text}")
             return None
         result = response.json()
-        content = result["choices"][0]["message"]["content"].strip()
+        content = result["choices"]["message"]["content"].strip()
 
-        # ----------- BULLETPROOF JSON CLEAN CODE -----------
-        if "```
-            content = content.split("```json")[1]
-            if "```
-                content = content.split("```")[0]
-        elif "```
-            content = content.split("```")[1]
-            if "```
-                content = content.split("```")[0]
-        start, end = content.find("{"), content.rfind("}")+1
-        if start >= 0 and end > start:
+        # ----------- ABSOLUTELY BULLETPROOF JSON BLOCK -----------
+        # Remove Markdown code blocks, robust to all LLM output
+        if "```json" in content:
+            content = content.split("```
+            if "```" in content:
+                content = content.split("```
+        elif "```" in content:
+            content = content.split("```
+            if "```" in content:
+                content = content.split("```
+
+        start = content.find("{")
+        end = content.rfind("}") + 1
+        if start != -1 and end > start:
             return json.loads(content[start:end])
         else:
             raise ValueError("No valid JSON found in LLM response.")
     except Exception as e:
         st.error(f"JSON parsing error: {e}")
-        st.expander("Raw API Response (debug)").code(content)
+        st.expander("Raw API Response (debug):").code(content)
         return None
 
 # ========= COLOR PALETTE =========
@@ -141,7 +144,6 @@ def display_results(analysis):
     brand = analysis.get("personal_brand_sizzle", "")
     future = analysis.get("future_ready","")
     storytelling = analysis.get("storytelling_rating","N/A")
-
     st.markdown(
         f"""
         <div style='background:linear-gradient(90deg,#4f8cff,#43e97b 100%);padding:2.2rem 1.2rem;border-radius:32px;
@@ -153,7 +155,6 @@ def display_results(analysis):
             <p style='font-size:1.17rem;color:#fafdff;font-weight:400;margin-top:1.2em;'>{analysis['executive_summary']}</p>
         </div>
         """, unsafe_allow_html=True)
-    # -- Sizzle, Future, Storytelling
     st.markdown(f"""
         <div style='margin:38px 0 22px 0;display:flex;flex-wrap:wrap;gap:1.7em;justify-content:space-between;'>
         <div style='flex:1;background:{bg};border-radius:18px;padding:1em 1.3em;box-shadow:0 2px 14px #aaa3;'>
@@ -171,6 +172,7 @@ def display_results(analysis):
         </div>
         """, unsafe_allow_html=True
     )
+
     st.markdown("<div style='margin:38px 0 11px 0;font-size:1.35rem;font-weight:bold;letter-spacing:-0.5px;color:#754dee;'>🚦 Detailed Breakdown</div>", unsafe_allow_html=True)
     tab1, tab2, tab3, tab4 = st.tabs(["ATS Compatibility", "AI & Keywords", "Impact Story", "Presentation"])
     with tab1:
@@ -181,7 +183,6 @@ def display_results(analysis):
         st.markdown(f"<div style='background:{bg};border-left:6px solid #ffd166;padding:1em 2em;border-radius:14px;font-size:1.05em;'>{analysis['detailed_analysis']['content_impact']}</div>", unsafe_allow_html=True)
     with tab4:
         st.markdown(f"<div style='background:{bg};border-left:6px solid #118ab2;padding:1em 2em;border-radius:14px;font-size:1.05em;'>{analysis['detailed_analysis']['professional_presentation']}</div>", unsafe_allow_html=True)
-    # Strengths/Issues
     c1, c2 = st.columns(2)
     with c1:
         st.markdown("<div style='font-weight:bold;color:#34a853;font-size:1.09em;margin:0.7em 0;'>💪 Strengths</div>", unsafe_allow_html=True)
@@ -236,7 +237,7 @@ def main():
     </div>
     """, unsafe_allow_html=True)
     st.markdown("<div style='background:#fff;box-shadow:0 3px 18px #b3e8ef1c;border-radius:22px;padding:2em 1.3em 1.6em 1.3em;margin-bottom:2em;'>", unsafe_allow_html=True)
-    col1, col2 = st.columns([2,1])
+    col1, col2 = st.columns()
     with col1:
         st.markdown("<b>📤 Upload resume (PDF/DOCX)</b>", unsafe_allow_html=True)
         resume_file = st.file_uploader("", type=["pdf","docx"])
@@ -258,7 +259,7 @@ def main():
                         st.error("❌ Analysis failed. Please try again.")
                 else:
                     st.error("❌ Could not extract text from file.")
-    st.markdown("<div style='text-align:center;padding:2.3rem 0 0 0;color:#bdbdbd;font-size:1.01rem;'>🏆 Made with ❤️ using Streamlit & Executive Coach LLMs</div>", unsafe_allow_html=True)
+    st.markdown("<div style='text-align:center;padding:2.3rem 0 0 0;color:#bdbdbd;font-size:1.03rem;'>🏆 Made with ❤️ by Sreekesh M using Streamlit & Executive Coach LLMs</div>", unsafe_allow_html=True)
 
 if __name__ == "__main__":
     main()
