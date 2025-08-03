@@ -1,3 +1,4 @@
+python
 import streamlit as st
 import requests
 import json
@@ -103,15 +104,17 @@ Provide JSON assessment as per instructions.
             return None
         result = response.json()
         content = result["choices"][0]["message"]["content"].strip()
+        
         # -- Bulletproof Markdown & JSON extraction --
-        if "```
+        if "```json" in content:
             content = content.split("```json")[1]
-            if "```
+            if "```" in content:
                 content = content.split("```")[0]
-        elif "```
+        elif "```" in content:
             content = content.split("```")[1]
-            if "```
+            if "```" in content:
                 content = content.split("```")[0]
+        
         start = content.find("{")
         end = content.rfind("}") + 1
         if start != -1 and end > start:
@@ -184,6 +187,7 @@ def display_results(analysis):
         st.markdown(f"<div style='background:{bg};border-left:6px solid #ffd166;padding:1.09em 2em;border-radius:15px;font-size:1.06em;color:#fff8e3;'>{analysis['detailed_analysis']['content_impact']}</div>", unsafe_allow_html=True)
     with tab4:
         st.markdown(f"<div style='background:{bg};border-left:6px solid #118ab2;padding:1.09em 2em;border-radius:15px;font-size:1.06em;color:#e3f0ff;'>{analysis['detailed_analysis']['professional_presentation']}</div>", unsafe_allow_html=True)
+    
     c1, c2 = st.columns(2)
     with c1:
         st.markdown("<div style='font-weight:800;color:#24fca6;font-size:1.09em;margin:0.7em 0;'>💪 Strengths</div>", unsafe_allow_html=True)
@@ -193,9 +197,11 @@ def display_results(analysis):
         st.markdown("<div style='font-weight:800;color:#ef476f;font-size:1.09em;margin:0.7em 0;'>🚨 Issues</div>", unsafe_allow_html=True)
         for i in analysis['critical_issues']:
             st.markdown(f"<div style='background:rgba(239,71,111,0.10);padding:9px 14px;border-left:4px solid #ef476f;border-radius:7px;margin:7px 0 3px 0;color:#ffd1de;'>{i}</div>", unsafe_allow_html=True)
+    
     st.markdown("<div style='margin:2.2em 0 0.9em 0;font-weight:800;color:#7cfcff;font-size:1.15em;'>🔧 Improvements</div>", unsafe_allow_html=True)
     for n, rec in enumerate(analysis['improvement_recommendations'], 1):
         st.markdown(f"<div style='background:rgba(124,252,255,0.08);color:#b4edfa;padding:10px 23px;border-left:5px solid #51f6f6;border-radius:7px;margin:7px 0 0 0;'><strong>{n}.</strong> {rec}</div>", unsafe_allow_html=True)
+    
     st.markdown("<div style='margin:2.1em 0 0.4em 0;font-size:1.12em;font-weight:900;color:#43e97b;'>🎯 Keyword Results</div>", unsafe_allow_html=True)
     col1, col2, col3 = st.columns(3)
     with col1:
@@ -210,13 +216,14 @@ def display_results(analysis):
         st.markdown("<div style='color:#ffd166;font-weight:800;'>🟡 Optimize</div>", unsafe_allow_html=True)
         for k in analysis['keyword_analysis']['optimization_opportunities']:
             st.markdown(f"<div style='background:rgba(255,209,102,0.15);color:#f6ebbb;padding:7px 14px;border-radius:12px;margin-bottom:4px;'>{k}</div>", unsafe_allow_html=True)
+    
     st.markdown("<div style='margin:2.5em 0 0.7em 0;font-size:1.12em;font-weight:800;color:#96fff9;'>🏢 Industry Fit</div>", unsafe_allow_html=True)
     st.markdown(f"<div style='background:{bg};border-left:6px solid #96fff9;padding:1.09em 1.6em;border-radius:15px;margin-bottom:36px;font-size:1.09em;line-height:1.53;color:#47fff7;'>{analysis['industry_alignment']}</div>", unsafe_allow_html=True)
 
 # ====== MAIN APP ======
 def main():
     st.set_page_config(page_title="✨ Executive ATS Resume Analyzer", layout="wide", page_icon="📝")
-    st.markdown("""
+        st.markdown("""
     <style>
     body { background: linear-gradient(120deg,#0a182e 0,#141e30 60%,#093648 100%) !important; color: #bde2e8; }
     .stApp { background: linear-gradient(120deg,#0a182f 0,#141e30 60%,#093648 100%) !important; }
@@ -232,6 +239,7 @@ def main():
     }
     </style>
     """, unsafe_allow_html=True)
+    
     # DARK/NIGHT-GLASS HEADER
     st.markdown("""
     <div style='background: linear-gradient(87deg,#191d3e 60%,#0d252d 100%);
@@ -241,6 +249,7 @@ def main():
       <p style='font-size:1.17rem;margin-top:1.3rem;font-weight:400;color:#eccbfc;'>Upload your resume for the toughest, most beautiful, <span style='color:#43e97b'><b>AI-powered</b></span> recruiter review you'll ever see.</p>
     </div>
     """, unsafe_allow_html=True)
+    
     st.markdown("<div style='background:rgba(27,36,89,0.77);box-shadow:0 3px 18px #10193e22;border-radius:23px;padding:2em 1.3em 1.6em 1.3em;margin-bottom:2em;'>", unsafe_allow_html=True)
     col1, col2 = st.columns(2)
     with col1:
@@ -250,6 +259,7 @@ def main():
         st.markdown("<b style='color:#eaddff'>💼 (Optional) Job Description</b>", unsafe_allow_html=True)
         job_description = st.text_area("",height=110,placeholder="Paste a job description or leave blank for market review...")
     st.markdown("</div>", unsafe_allow_html=True)
+    
     if resume_file:
         if st.button("🔎 Super Analyze Resume", use_container_width=True):
             with st.spinner("AI is reading your resume—assessing brand, market, and visual impact..."):
@@ -264,6 +274,7 @@ def main():
                         st.error("❌ Analysis failed. Please try again.")
                 else:
                     st.error("❌ Could not extract text from file.")
+    
     st.markdown("<div style='text-align:center;padding:2.1rem 0 0 0;color:#a8adc7;font-size:1.02rem;'><b>🏆 by Sreekesh M — Executive Resume Intelligence, Streamlit Edition</b></div>", unsafe_allow_html=True)
 
 if __name__ == "__main__":
